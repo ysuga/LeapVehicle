@@ -210,7 +210,7 @@ class LeapVehicle(OpenRTM_aist.DataFlowComponentBase):
 			v = self._frameIn.read()
 			#print '[RTC::LeapVehicle] Frame - %s Timestamp - %s' % (v.id, v.timestamp)
 			if len(v.hands) == 0:
-				print '[RTC::LeapVehicle] No hands'
+				#print '[RTC::LeapVehicle] No hands'
 				self._d_vel.data.vx = 0
 				self._d_vel.data.vy = 0
 				self._d_vel.data.va = 0
@@ -219,25 +219,25 @@ class LeapVehicle(OpenRTM_aist.DataFlowComponentBase):
 			else:
 				if len(v.gestures) == 0:
 					for i, hand in enumerate(v.hands):
-						print '[RTC::LeapVehicle] Hand[%s] - Position(%s) - Direction(%s) - Fingers(%s)' % (i, repr(hand.palmPosition), repr(hand.palmDirection), len(hand.fingers))
+						#print '[RTC::LeapVehicle] Hand[%s] - Position(%s) - Direction(%s) - Fingers(%s)' % (i, repr(hand.palmPosition), repr(hand.palmDirection), len(hand.fingers))
 					
-						print '[RTC::LeapVehicle] Hand %s' % i
+						#print '[RTC::LeapVehicle] Hand %s' % i
 						if len(hand.fingers) == 2:
-							print '[RTC::LeapVehicle] Two Fingers'
+							#print '[RTC::LeapVehicle] Two Fingers'
 							self._d_vel.data.vx = 0.1
 							self._d_vel.data.vy = 0
 							self._d_vel.data.va = -hand.palmDirection.x
 							self._velOut.write()
 							pass
 						if len(hand.fingers) == 3:
-							print '[RTC::LeapVehicle] Two Fingers'
+							#print '[RTC::LeapVehicle] Two Fingers'
 							self._d_vel.data.vx = 0.3
 							self._d_vel.data.vy = 0
 							self._d_vel.data.va = -hand.palmDirection.x
 							self._velOut.write()
 							pass
 						if len(hand.fingers) == 4:
-							print '[RTC::LeapVehicle] Two Fingers'
+							#print '[RTC::LeapVehicle] Two Fingers'
 							self._d_vel.data.vx = 0.5
 							self._d_vel.data.vy = 0
 							self._d_vel.data.va = -hand.palmDirection.x
