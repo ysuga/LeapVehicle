@@ -61,10 +61,13 @@ class LeapVehicle(OpenRTM_aist.DataFlowComponentBase):
 		OpenRTM_aist.DataFlowComponentBase.__init__(self, manager)
 
 		self._d_frame = ssr.Frame(0, 0, [], [])
+		self._d_vel = RTC.TimedVelocity2D(RTC.Time(0,0), RTC.Velocity2D(0, 0, 0))
 		"""
 		"""
 		
 		self._frameIn = OpenRTM_aist.InPort("frame", self._d_frame)
+
+		self._velOut = OpenRTM_aist.OutPort("vel", self._d_vel)
 		#circle = ssr.CircleGesture(0, 0, 0, ssr.Vector(0,0,0), ssr.Vector(0,0,0), 0)
 		#swipe  = ssr.SwipeGesture(0, ssr.Vector(0, 0,0 ), 0)
 		#key    = ssr.KeyTapGesture(0, ssr.Vector(0, 0, 0), ssr.Vector(0, 0, 0))
@@ -106,8 +109,9 @@ class LeapVehicle(OpenRTM_aist.DataFlowComponentBase):
 		# Set InPort buffers
 		self.addInPort("frame",self._frameIn)
 		#self.addInPort("gesture",self._gestureIn)
-		
+
 		# Set OutPort buffers
+		self.addOutPort("vel", self._velOut)
 		
 		# Set service provider to Ports
 		
@@ -168,7 +172,10 @@ class LeapVehicle(OpenRTM_aist.DataFlowComponentBase):
 		#
 		#
 	def onActivated(self, ec_id):
-	
+		self._d_vel.data.vx = 0
+		self._d_vel.data.vy = 0
+		self._d_vel.data.va = 0
+		self._velOut.write()
 		return RTC.RTC_OK
 	
 		##
@@ -182,7 +189,10 @@ class LeapVehicle(OpenRTM_aist.DataFlowComponentBase):
 		#
 		#
 	def onDeactivated(self, ec_id):
-	
+		self._d_vel.data.vx = 0
+		self._d_vel.data.vy = 0
+		self._d_vel.data.va = 0
+		self._velOut.write()
 		return RTC.RTC_OK
 	
 		##
@@ -199,27 +209,72 @@ class LeapVehicle(OpenRTM_aist.DataFlowComponentBase):
 		if self._frameIn.isNew():
 			v = self._frameIn.read()
 			#print '[RTC::LeapVehicle] Frame - %s Timestamp - %s' % (v.id, v.timestamp)
-			for i, hand in enumerate(v.hands):
-				#print '[RTC::LeapVehicle] Hand[%s] - Position(%s) - Direction(%s) - Fingers(%s)' % (i, repr(hand.palmPosition), repr(hand.palmDirection), len(hand.fingers))
+			if len(v.hands) == 0:
+				print '[RTC::LeapVehicle] No hands'
+				self._d_vel.data.vx = 0
+				self._d_vel.data.vy = 0
+				self._d_vel.data.va = 0
+				self._velOut.write()
 				pass
+			else:
+				if len(v.gestures) == 0:
+					for i, hand in enumerate(v.hands):
+						print '[RTC::LeapVehicle] Hand[%s] - Position(%s) - Direction(%s) - Fingers(%s)' % (i, repr(hand.palmPosition), repr(hand.palmDirection), len(hand.fingers))
+					
+						print '[RTC::LeapVehicle] Hand %s' % i
+						if len(hand.fingers) == 2:
+							print '[RTC::LeapVehicle] Two Fingers'
+							self._d_vel.data.vx = 0.1
+							self._d_vel.data.vy = 0
+							self._d_vel.data.va = -hand.palmDirection.x
+							self._velOut.write()
+							pass
+						if len(hand.fingers) == 3:
+							print '[RTC::LeapVehicle] Two Fingers'
+							self._d_vel.data.vx = 0.3
+							self._d_vel.data.vy = 0
+							self._d_vel.data.va = -hand.palmDirection.x
+							self._velOut.write()
+							pass
+						if len(hand.fingers) == 4:
+							print '[RTC::LeapVehicle] Two Fingers'
+							self._d_vel.data.vx = 0.5
+							self._d_vel.data.vy = 0
+							self._d_vel.data.va = -hand.palmDirection.x
+							self._velOut.write()
+							pass
 
-			for i, gesture in enumerate(v.gestures):
-				type_str = "invalid"
-				if gesture.type == ssr.TYPE_INVALID:
-					print '[RTC::LeapVehicle] InvalidGesture'
-				elif gesture.type == ssr.TYPE_SWIPE:
+				else: # if gesture
+					for i, gesture in enumerate(v.gestures):
+						type_str = "invalid"
+						if gesture.type == ssr.TYPE_INVALID:
+							#print '[RTC::LeapVehicle] InvalidGesture'
+							pass
+						elif gesture.type == ssr.TYPE_SWIPE:
 					#print 'RTC::LeapVehicle] SwipeGesture'
-					print '[RTC::LeapVehicle] SwipeGesture - state %s, direction %s, speed %s' % (gesture.swipe.state, gesture.swipe.direction, gesture.swipe.speed)
-				elif gesture.type == ssr.TYPE_CIRCLE:
+							#print '[RTC::LeapVehicle] SwipeGesture - state %s, direction %s, speed %s' % (gesture.swipe.state, gesture.swipe.direction, gesture.swipe.speed)
+							pass
+						elif gesture.type == ssr.TYPE_CIRCLE:
 					#print 'RTC::LeapVehicle] CircleGesture'
-					print '[RTC::LeapVehicle] CircleGesture - state %s, progress %s, radius %s, center %s, normal %s' % (gesture.circle.state, gesture.circle.progress, gesture.circle.radius, gesture.circle.center, gesture.circle.normal)
-				elif gesture.type == ssr.TYPE_SCREEN_TAP:
+							#print '[RTC::LeapVehicle] CircleGesture - state %s, progress %s, radius %s, center %s, normal %s' % (gesture.circle.state, gesture.circle.progress, gesture.circle.radius, gesture.circle.center, gesture.circle.normal)
+							#gesture.circle.
+							self._d_vel.data.vx = 0
+							self._d_vel.data.vy = 0
+							self._d_vel.data.va = gesture.circle.normal.z
+							self._velOut.write()
+							pass
+
+							pass
+						elif gesture.type == ssr.TYPE_SCREEN_TAP:
 					#print 'RTC::LeapVehicle] ScreenTapGesture'
-					print '[RTC::LeapVehicle] ScreentapGesture - state %s, direction %s, position %s' % (gesture.screen.state, gesture.screen.direction, gesture.screen.position)
-				elif gesture.type == ssr.TYPE_KEY_TAP:
+							#print '[RTC::LeapVehicle] ScreentapGesture - state %s, direction %s, position %s' % (gesture.screen.state, gesture.screen.direction, gesture.screen.position)
+							pass
+						elif gesture.type == ssr.TYPE_KEY_TAP:
 					#print 'RTC::LeapVehicle] KeyTapGesture'
-					print '[RTC::LeapVehicle] KeytapGesture - state %s, direction %s, position %s' % (gesture.key.state, gesture.key.direction, gesture.key.position)
+							#print '[RTC::LeapVehicle] KeytapGesture - state %s, direction %s, position %s' % (gesture.key.state, gesture.key.direction, gesture.key.position)
+							pass
 				
+
 		return RTC.RTC_OK
 	
 	#	##
