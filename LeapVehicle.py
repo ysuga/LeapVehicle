@@ -208,7 +208,7 @@ class LeapVehicle(OpenRTM_aist.DataFlowComponentBase):
 	def onExecute(self, ec_id):
 		if self._frameIn.isNew():
 			v = self._frameIn.read()
-			#print '[RTC::LeapVehicle] Frame - %s Timestamp - %s' % (v.id, v.timestamp)
+			# print '[RTC::LeapVehicle] Frame - %s Timestamp - %s' % (v.id, v.timestamp)
 			if len(v.hands) == 0:
 				#print '[RTC::LeapVehicle] No hands'
 				self._d_vel.data.vx = 0
@@ -243,6 +243,13 @@ class LeapVehicle(OpenRTM_aist.DataFlowComponentBase):
 							self._d_vel.data.va = -hand.palmDirection.x
 							self._velOut.write()
 							pass
+						if len(hand.fingers) == 5:						
+							#print '[RTC::LeapVehicle] Two Fingers'
+							self._d_vel.data.vx = 0.3
+							self._d_vel.data.vy = 0
+							self._d_vel.data.va = -hand.palmDirection.x
+							self._velOut.write()
+							pass
 
 				else: # if gesture
 					for i, gesture in enumerate(v.gestures):
@@ -255,12 +262,12 @@ class LeapVehicle(OpenRTM_aist.DataFlowComponentBase):
 							#print '[RTC::LeapVehicle] SwipeGesture - state %s, direction %s, speed %s' % (gesture.swipe.state, gesture.swipe.direction, gesture.swipe.speed)
 							pass
 						elif gesture.type == ssr.TYPE_CIRCLE:
-					#print 'RTC::LeapVehicle] CircleGesture'
+							print 'RTC::LeapVehicle] CircleGesture'
 							#print '[RTC::LeapVehicle] CircleGesture - state %s, progress %s, radius %s, center %s, normal %s' % (gesture.circle.state, gesture.circle.progress, gesture.circle.radius, gesture.circle.center, gesture.circle.normal)
 							#gesture.circle.
 							self._d_vel.data.vx = 0
 							self._d_vel.data.vy = 0
-							self._d_vel.data.va = gesture.circle.normal.z
+							self._d_vel.data.va = gesture.circle.normal.z * 1.2
 							self._velOut.write()
 							pass
 
